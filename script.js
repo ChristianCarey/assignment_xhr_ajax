@@ -2,34 +2,52 @@ var $ = {};
 
 $.ajax = (function() {
 
-  var _xhr = function(settings) {
+  function JQXHR(xhr) {
+    this.readyState = xhr.readyState;
+    this.responseText = xhr.responseText;
+    this.responseJSON = JSON.parse(xhr.responseText);
+    this.status = xhr.status;
+    this.readyState = xhr.readyState
+  };
+
+  var _sendXHR = function(settings) {
     var xhr = new XMLHttpRequest();
+
     xhr.open(settings.method, settings.url, true);
 
     xhr.onreadystatechange = function() {
       if (xhr.readyState == 4) {
-        var response = JSON.parse(xhr.responseText);
-        if (xhr.status === 200 && response.status === "OK") {
-          settings.success();
+        if (xhr.status === 200) {
+          if (settings.success) {
+            settings.success(xhr.responseText);
+          }
         } else {
-          settings.error(); 
+          if (settings.error) {
+            settings.error(); 
+          }
+        }
+        if (settings.complete) {
+          settings.complete();
         }
       }
     }
 
     xhr.send();
+    return xhr;
   }
 
   return function(settings) {
-
+    settings.method = settings.method || settings.type;
+    var xhr = _sendXHR(settings);
+    return new JQXHR(xhr);
   }
 
 })();
 
-// Example AJAX
-// $.ajax({
-//   method: "POST",
-//   url: "some.php",
-//   data: { name: "John", location: "Boston" },
-//   success: function() {},
-// })
+var response = $.ajax({
+    url: "https://reqres.in/api/users",
+    type: "GET",
+    success: function(response){
+        console.log(response);
+    }
+});
